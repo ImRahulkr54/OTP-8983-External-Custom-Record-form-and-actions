@@ -1,0 +1,2 @@
+# OTP-8983-External-Custom-Record-form-and-actions
+This script is defined to Create a custom record with fields Customer's name &amp; email, Subject and Message. Entries to the custom record can be made externally. If there's a customer with given email address, link that customer to the record. Whenever there is a entry, notify the Admin &amp; If there is a Sales rep, Send notification to the Sales rep.
