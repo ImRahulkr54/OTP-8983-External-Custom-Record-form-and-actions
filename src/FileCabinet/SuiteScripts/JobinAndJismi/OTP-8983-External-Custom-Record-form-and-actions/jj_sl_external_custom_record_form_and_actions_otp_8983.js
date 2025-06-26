@@ -64,15 +64,83 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
         let customerSubject = scriptContext.request.parameters.custpage_subject;
         let customerMessage = scriptContext.request.parameters.custpage_message;
 
-        let customRecId = createCustomRecord(
-          customerName,
-          customerEmail,
-          customerSubject,
-          customerMessage
-        );
+        
+        if(customerName && customerEmail && customerSubject && customerMessage) {
 
-        if (customRecId) {
-          salesrepMail(customRecId, customerSubject, customerMessage);
+          let duplicateSearch = search.create({
+            title: "Duplicate Search JJ",
+            id: "jj_duplicate_search",
+            type: 'customrecord_jj_external_custom_record',
+            filters: [["custrecord_jj_customer_email", "is", customerEmail]],
+            columns: ["custrecord_jj_customer_email"],
+          });
+
+          let copyCount = 0;
+
+          duplicateSearch.run().each(function(){
+
+              copyCount++;
+
+          });
+
+          if (copyCount>0) {
+
+            scriptContext.response.write(`
+              <html>
+                <body>
+                  <h1 style='color: red;'>Warning: User Already Exists</h1>
+                </body>
+              </html>
+            `);
+
+            return;
+            
+          } 
+          
+          else {
+
+            let customRecordDetails = createCustomRecord(
+              customerName,
+              customerEmail,
+              customerSubject,
+              customerMessage
+            );
+
+            let customRecArr = customRecordDetails.resultArr;
+            let customRecId = customRecordDetails.customRecId;
+
+            if (customRecArr.length) {
+              salesrepMail(customRecId, customerSubject, customerMessage);
+            }
+
+            scriptContext.response.write(`
+              <html>
+                <body>
+                  <h1>Form Submitted Successfully!</h1>
+                  <p>Customer Name: ${customerName}</p>
+                  <p>Customer Email: ${customerEmail}</p>
+                  <p>Subject: ${customerSubject}</p>
+                  <p>Message: ${customerMessage}</p>
+                  <p>Internal ID of the created record: ${customRecId}</p>
+                </body>
+              </html>
+            `);
+          }
+
+        }
+
+        else {
+
+          scriptContext.response.write(`
+              <html>
+                <body>
+                  <h1 style='color : red'>Error: Please fill all required fields.</h1>
+                </body>
+              </html>
+          `);
+            
+          return;
+
         }
 
       }
@@ -139,7 +207,7 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
    * @param {String} customerEmail - Email of the Customer entered in the Suitelet Form.
    * @param {String} customerSubject - Subject entered in the Suitelet Form.
    * @param {String} customerMessage - Message entered in the Suitelet Form.
-   * @returns {Number} - Id of the custom record created.
+   * @returns {Object} - Array of email and Id of the created custom record.
    */
 
   function createCustomRecord(customerName, customerEmail, customerSubject, customerMessage) {
@@ -205,7 +273,7 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
                 Best regards,\n${adminName}`,
       });
 
-      return resultArr.length > 0 ? customRecId : null;
+      return {resultArr,customRecId};
 
     } catch (error) {
       log.error("error", error.message);
