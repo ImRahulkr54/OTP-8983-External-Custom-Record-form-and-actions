@@ -83,6 +83,12 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
 
   };
 
+  /**
+   * Defines the Suitelet script to create a suitelet form.
+   * @param {Object} scriptContext
+   * @since 2015.2
+   */
+
   function createForm(scriptContext) {
 
     const form = serverWidget.createForm({
@@ -120,6 +126,15 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
     scriptContext.response.writePage({ pageObject: form });
 
   }
+
+  /**
+   * Defines the Suitelet script to create a custom record.
+   * @param {String} customerName - Name of the Customer entered in the Suitelet Form.
+   * @param {String} customerEmail - Email of the Customer entered in the Suitelet Form.
+   * @param {String} customerSubject - Subject entered in the Suitelet Form.
+   * @param {String} customerMessage - Message entered in the Suitelet Form.
+   * @returns {Number} - Id of the custom record created.
+   */
 
   function createCustomRecord(customerName, customerEmail, customerSubject, customerMessage) {
     
@@ -185,6 +200,14 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
     return resultArr.length > 0 ? customRecId : null;
 
   }
+
+  /**
+   * Defines the Suitelet script to send email to sales rep.
+   * @param {Number} paramsId - Internal ID of the created custom record.
+   * @param {String} paramsSubject - Subject of the email to the sales rep.
+   * @param {String} paramsMessage - Message of the email to the sales rep.
+   * @returns {void}
+   */
 
   function salesrepMail(paramsId, paramsSubject, paramsMessage) {
 
