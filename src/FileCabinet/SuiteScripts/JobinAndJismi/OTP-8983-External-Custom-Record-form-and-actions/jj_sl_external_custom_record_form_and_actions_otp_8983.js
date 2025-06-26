@@ -91,39 +91,45 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
 
   function createForm(scriptContext) {
 
-    const form = serverWidget.createForm({
-      title: "External Custom Record Form",
-    });
+    try {
 
-    form.addField({
-      id: "custpage_name",
-      type: serverWidget.FieldType.TEXT,
-      label: "Customer Name",
-    });
+      const form = serverWidget.createForm({
+        title: "External Custom Record Form",
+      });
 
-    form.addField({
-      id: "custpage_email",
-      type: serverWidget.FieldType.EMAIL,
-      label: "Customer Email",
-    });
+      form.addField({
+        id: "custpage_name",
+        type: serverWidget.FieldType.TEXT,
+        label: "Customer Name",
+      });
 
-    form.addField({
-      id: "custpage_subject",
-      type: serverWidget.FieldType.TEXT,
-      label: "Subject",
-    });
+      form.addField({
+        id: "custpage_email",
+        type: serverWidget.FieldType.EMAIL,
+        label: "Customer Email",
+      });
 
-    form.addField({
-      id: "custpage_message",
-      type: serverWidget.FieldType.TEXTAREA,
-      label: "Message",
-    });
+      form.addField({
+        id: "custpage_subject",
+        type: serverWidget.FieldType.TEXT,
+        label: "Subject",
+      });
 
-    form.addSubmitButton({
-      label: "Submit",
-    });
+      form.addField({
+        id: "custpage_message",
+        type: serverWidget.FieldType.TEXTAREA,
+        label: "Message",
+      });
 
-    scriptContext.response.writePage({ pageObject: form });
+      form.addSubmitButton({
+        label: "Submit",
+      });
+
+      scriptContext.response.writePage({ pageObject: form });
+
+    } catch (error) {
+      log.error("error", error.message);
+    }
 
   }
 
@@ -138,66 +144,72 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
 
   function createCustomRecord(customerName, customerEmail, customerSubject, customerMessage) {
     
-    let emailSearch = search.create({
-      title: "Email Search JJ",
-      id: "jj_email_search",
-      type: record.Type.CUSTOMER,
-      filters: [["email", "is", customerEmail]],
-      columns: ["internalid", "email"],
-    });
+    try {
 
-    let resultArr = [];
+      let emailSearch = search.create({
+        title: "Email Search JJ",
+        id: "jj_email_search",
+        type: record.Type.CUSTOMER,
+        filters: [["email", "is", customerEmail]],
+        columns: ["internalid", "email"],
+      });
 
-    let emailSearchRun = emailSearch.run().each(function (result) {
-      resultArr.push(result.getValue("internalid"));
-    });
+      let resultArr = [];
 
-    let customerRecord = record.create({
-      type: "customrecord_jj_external_custom_record",
-      isDynamic: "true",
-    });
+      let emailSearchRun = emailSearch.run().each(function (result) {
+        resultArr.push(result.getValue("internalid"));
+      });
 
-    customerRecord.setValue({
-      fieldId: "custrecord_jj_customer_name",
-      value: customerName || " ",
-    });
+      let customerRecord = record.create({
+        type: "customrecord_jj_external_custom_record",
+        isDynamic: "true",
+      });
 
-    customerRecord.setValue({
-      fieldId: "custrecord_jj_customer_email",
-      value: customerEmail || " ",
-    });
+      customerRecord.setValue({
+        fieldId: "custrecord_jj_customer_name",
+        value: customerName || " ",
+      });
 
-    customerRecord.setValue({
-      fieldId: "custrecord_jj_reference_customer",
-      value: resultArr[0] || " ",
-    });
+      customerRecord.setValue({
+        fieldId: "custrecord_jj_customer_email",
+        value: customerEmail || " ",
+      });
 
-    customerRecord.setValue({
-      fieldId: "custrecord_jj_subject",
-      value: customerSubject || " ",
-    });
+      customerRecord.setValue({
+        fieldId: "custrecord_jj_reference_customer",
+        value: resultArr[0] || " ",
+      });
 
-    customerRecord.setValue({
-      fieldId: "custrecord_jj_message",
-      value: customerMessage || " ",
-    });
+      customerRecord.setValue({
+        fieldId: "custrecord_jj_subject",
+        value: customerSubject || " ",
+      });
 
-    let customRecId = customerRecord.save();
+      customerRecord.setValue({
+        fieldId: "custrecord_jj_message",
+        value: customerMessage || " ",
+      });
 
-    let adminName = "Larry Nelson";
-    let adminEmail = "ss2extend040425aj@oracle.com";
+      let customRecId = customerRecord.save();
 
-    email.send({
-      author: -5,
-      recipients: adminEmail,
-      subject: `New Record Entered : ${customerSubject}`,
-      body: `\nDear ${adminName},\n\nA new entry has been created.\n
+      let adminName = "Larry Nelson";
+      let adminEmail = "ss2extend040425aj@oracle.com";
+
+      email.send({
+        author: -5,
+        recipients: adminEmail,
+        subject: `New Record Entered : ${customerSubject}`,
+        body: `\nDear ${adminName},\n\nA new entry has been created.\n
                 Subject: ${customerSubject}\n
                 Message: ${customerMessage}\n\n
                 Best regards,\n${adminName}`,
-    });
+      });
 
-    return resultArr.length > 0 ? customRecId : null;
+      return resultArr.length > 0 ? customRecId : null;
+
+    } catch (error) {
+      log.error("error", error.message);
+    }
 
   }
 
@@ -211,44 +223,48 @@ define(["N/email", "N/log", "N/record", "N/search", "N/ui/serverWidget"],
 
   function salesrepMail(paramsId, paramsSubject, paramsMessage) {
 
-    let fieldLookUp = search.lookupFields({
-      type: "customrecord_jj_external_custom_record",
-      id: paramsId,
-      columns: ["custrecord_jj_reference_customer"],
-    });
+    try {
 
-    if (fieldLookUp.custrecord_jj_reference_customer[0].value) {
-
-      let salesRepLookUp = search.lookupFields({
-        type: record.Type.CUSTOMER,
-        id: fieldLookUp.custrecord_jj_reference_customer[0].value,
-        columns: ["salesrep"],
+      let fieldLookUp = search.lookupFields({
+        type: "customrecord_jj_external_custom_record",
+        id: paramsId,
+        columns: ["custrecord_jj_reference_customer"],
       });
 
-      if (salesRepLookUp.salesrep[0].value) {
-
-        let emailLookUp = search.lookupFields({
-          type: record.Type.EMPLOYEE,
-          id: salesRepLookUp.salesrep[0].value,
-          columns: ["entityid", "email"],
+      if (fieldLookUp.custrecord_jj_reference_customer[0].value) {
+        
+        let salesRepLookUp = search.lookupFields({
+          type: record.Type.CUSTOMER,
+          id: fieldLookUp.custrecord_jj_reference_customer[0].value,
+          columns: ["salesrep"],
         });
 
-        let adminName = "Larry Nelson";
+        if (salesRepLookUp.salesrep[0].value) {
+          let emailLookUp = search.lookupFields({
+            type: record.Type.EMPLOYEE,
+            id: salesRepLookUp.salesrep[0].value,
+            columns: ["entityid", "email"],
+          });
 
-        if (emailLookUp.email) {
-          
-          email.send({
-            author: -5,
-            recipients: emailLookUp.email,
-            subject: `New Record Entered : ${paramsSubject}`,
-            body: `\nDear ${emailLookUp.entityid},\n\nA new entry has been created.\n
+          let adminName = "Larry Nelson";
+
+          if (emailLookUp.email) {
+            email.send({
+              author: -5,
+              recipients: emailLookUp.email,
+              subject: `New Record Entered : ${paramsSubject}`,
+              body: `\nDear ${emailLookUp.entityid},\n\nA new entry has been created.\n
                       Subject: ${paramsSubject}\n
                       Message: ${paramsMessage}\n\n
                        Best regards,\n${adminName}`,
-          });
+            });
+          }
         }
       }
+    } catch (error) {
+      log.error("error", error.message);
     }
+
   }
 
   return { onRequest };
